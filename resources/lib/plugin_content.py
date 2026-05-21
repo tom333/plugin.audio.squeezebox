@@ -566,18 +566,17 @@ class PluginContent:
                              'year': lms_item.get("year"),
                              'mediatype': "artist"
                          })
-        listitem.setArt({"thumb": thumb})
         listitem.setArt({"icon": thumb, "thumb": thumb})
         listitem.setProperty("DBYPE", "artist")
         # contextmenu
         contextmenu = []
-        params = quote_plus("playlist loadalbum * %s *" % lms_item["artist"].encode("utf-8"))
+        params = quote_plus("playlist loadalbum * %s *" % lms_item["artist"])
         contextmenu.append((self.addon.getLocalizedString(32203),
                             "RunPlugin(%s?action=command&params=%s)" % (PLUGIN_BASE, params)))
-        params = quote_plus("playlist insertalbum * %s *" % lms_item["artist"].encode("utf-8"))
+        params = quote_plus("playlist insertalbum * %s *" % lms_item["artist"])
         contextmenu.append((self.addon.getLocalizedString(32204),
                             "RunPlugin(%s?action=command&params=%s)" % (PLUGIN_BASE, params)))
-        params = quote_plus("playlist addalbum * %s *" % lms_item["artist"].encode("utf-8"))
+        params = quote_plus("playlist addalbum * %s *" % lms_item["artist"])
         contextmenu.append((self.addon.getLocalizedString(32205),
                             "RunPlugin(%s?action=command&params=%s)" % (PLUGIN_BASE, params)))
         listitem.addContextMenuItems(contextmenu, True)
@@ -611,14 +610,13 @@ class PluginContent:
                              'year': lms_item.get("year"),
                              'mediatype': 'album'
                          })
-        listitem.setArt({"thumb": thumb})
         listitem.setProperty("DBYPE", "album")
         listitem.setArt({"icon": thumb, "thumb": thumb})
         url = "plugin://plugin.audio.squeezebox?action=tracks&params=album_id:%s" % lms_item.get("id")
         # contextmenu
         contextmenu = []
         try:
-            special_char = "*".encode("utf-8")
+            special_char = "*"
             params = quote_plus(
                 u"playlist loadalbum %s %s %s" %
                 (special_char, lms_item["artist"].replace(
@@ -652,7 +650,6 @@ class PluginContent:
                              'comment': lms_item.get("comment"),
                              "mediatype": "song"
                          })
-        listitem.setArt({"thumb": lms_item["thumb"]})
         listitem.setArt({"icon": lms_item["thumb"], "thumb": lms_item["thumb"]})
         listitem.setProperty("isPlayable", "false")
         listitem.setProperty("DBYPE", "song")
