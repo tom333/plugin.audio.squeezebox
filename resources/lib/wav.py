@@ -35,3 +35,19 @@ def build_wav_header(duration):
     header = main_header + fmt_chunk + data_chunk
     total_size = riff_size + 8  # +8 for "RIFF" + size field
     return header, total_size
+
+
+def silent_stream_chunks(header, payload_size, max_buffer=8192):
+    """Yield the WAV header followed by `payload_size` zero bytes in chunks of
+    at most `max_buffer` bytes."""
+    yield header
+    written = 0
+    zeros = b"\x00" * max_buffer
+    while written < payload_size:
+        remaining = payload_size - written
+        if remaining >= max_buffer:
+            yield zeros
+            written += max_buffer
+        else:
+            yield b"\x00" * remaining
+            written = payload_size
