@@ -47,7 +47,7 @@ class MainService(threading.Thread):
 
         # get playerid based on mac address
         if self.addon.getSetting("disable_auto_mac") == "true" and self.addon.getSetting("manual_mac"):
-            playerid = self.addon.getSetting("manual_mac").decode("utf-8")
+            playerid = self.addon.getSetting("manual_mac")
         else:
             playerid = get_mac()
 
@@ -171,7 +171,7 @@ class MainService(threading.Thread):
                     # other track requested
                     log_msg("other track requested by lms server")
                     self.kodiplayer.play(self.kodiplayer.playlist, startpos=self.lmsserver.cur_index)
-                elif self.lmsserver.status["title"] != xbmc.getInfoLabel("MusicPlayer.Title").decode("utf-8"):
+                elif self.lmsserver.status["title"] != xbmc.getInfoLabel("MusicPlayer.Title"):
                     # monitor if title still matches
                     log_msg("title mismatch - updating playlist...")
                     self.kodiplayer.update_playlist()
@@ -194,7 +194,7 @@ class MainService(threading.Thread):
 
     def start_squeezelite(self):
         '''On supported platforms we include squeezelite binary'''
-        playername = xbmc.getInfoLabel("System.FriendlyName").decode("utf-8")
+        playername = xbmc.getInfoLabel("System.FriendlyName")
         if self.addon.getSetting("disable_auto_squeezelite") != "true":
             sl_binary = get_squeezelite_binary()
             if sl_binary and self.lmsserver:
@@ -207,7 +207,7 @@ class MainService(threading.Thread):
                     startupinfo = None
                     if os.name == 'nt':
                         startupinfo = subprocess.STARTUPINFO()
-                        startupinfo.dwFlags |= subprocess._subprocess.STARTF_USESHOWWINDOW
+                        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                     self._sl_exec = subprocess.Popen(args, startupinfo=startupinfo, stderr=subprocess.STDOUT)
                 except Exception as exc:
                     log_exception(__name__, exc)
@@ -226,7 +226,7 @@ class MainService(threading.Thread):
         '''make sure we don't have any (remaining) squeezelite processes running before we start one'''
         if xbmc.getCondVisibility("System.Platform.Windows"):
             startupinfo = subprocess.STARTUPINFO()
-            startupinfo.dwFlags |= subprocess._subprocess.STARTF_USESHOWWINDOW
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
             subprocess.Popen(["taskkill", "/IM", "squeezelite-win.exe"], startupinfo=startupinfo, shell=True)
             subprocess.Popen(["taskkill", "/IM", "squeezelite.exe"], startupinfo=startupinfo, shell=True)
         else:
