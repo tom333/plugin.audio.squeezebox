@@ -8,10 +8,12 @@
     Kodi player and perform actions on LMS server
 '''
 
-from utils import log_msg, log_exception, parse_duration
+from urllib.parse import quote_plus
+
 import xbmc
 import xbmcgui
-from urllib import quote_plus
+
+from utils import log_msg, log_exception, parse_duration
 
 class KodiPlayer(xbmc.Player):
     '''Monitor all player events in Kodi'''
@@ -30,7 +32,7 @@ class KodiPlayer(xbmc.Player):
 
     def close(self):
         '''cleanup on exit'''
-        exit = True
+        self.exit = True
         del self.playlist
 
     def onPlayBackPaused(self):
@@ -110,9 +112,7 @@ class KodiPlayer(xbmc.Player):
                              'year': lms_song.get("year"),
                              'comment': lms_song.get("comment")
                          })
-        listitem.setArt({"thumb": lms_song["thumb"]})
-        listitem.setIconImage(lms_song["thumb"])
-        listitem.setThumbnailImage(lms_song["thumb"])
+        listitem.setArt({"icon": lms_song["thumb"], "thumb": lms_song["thumb"]})
         if lms_song.get("remote_title") or not duration:
             # workaround for radio streams
             file_name = "http://127.0.0.1:%s/track/radio" % (self.webport)
