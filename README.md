@@ -1,6 +1,8 @@
 # plugin.audio.squeezebox
 Squeezelite player for Kodi
 
+> **v2.0** — ported to Kodi 21 Omega (Python 3). Older Kodi versions (≤20 Nexus) are no longer supported by this branch; install v1.0.19 instead.
+
 ________________________________________________________________________________________________________
 
 
@@ -47,7 +49,7 @@ And that is exactly what this add-on does, it feeds Kodi with a 100% silent PCM 
 - Install this add-on from my Kodi addon repository, that way all dependencies will be installed and you will get updates instantly. Please do not install directly from Github if you want to ask support on the forums.
 - Libreelec users: Make sure you have the mediatools addon installed as that includes Squeezelite !
 - You need to have a LMS Server on your network, for example installed on your NAS.
-- This addon only utilizes the more recent Json API of LMS-Server, the older telnet API is not used, so you need a recent version of the LMS server. I've tested it with LMS server version 7.9 myself.
+- This addon only utilizes the more recent Json API of LMS-Server, the older telnet API is not used, so you need a recent version of the LMS server. Tested against LMS 8.x and Kodi 21 Omega.
 - Make sure the LMS server doesn't require authentication for internal connections. I did not yet implement support for authentication.
 
 I have tested the addon on Windows, MacOS and libreelec running on a Pi.

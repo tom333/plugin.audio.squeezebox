@@ -8,11 +8,19 @@ A Kodi audio addon (`plugin.audio.squeezebox`) that turns Kodi into a Logitech M
 
 ## Runtime / language constraint
 
-**This is a Python 2.7 codebase, not Python 3.** `addon.xml` pins `xbmc.python` to `2.13.0` (Kodi Leia / v18 era), which only supports Python 2. Code uses Py2-only constructs throughout: `unicode`, `.iteritems()`, `StringIO` (not `io.StringIO`), `import urlparse`, `import thread`, `from urllib import quote_plus`, `.decode("utf-8")` on `getInfoLabel`/setting reads, bare `except:`, `print` as a statement. Any new code must remain Py2-compatible — do not introduce f-strings, `print()` as function with `from __future__`, `dict.items()` expecting a list, `urllib.parse`, etc.
+**This is a Python 3.11 codebase** targeting Kodi 21 Omega (`xbmc.python 3.0.3`). The v2.0 port (May 2026) converted everything from Py2/Leia to Py3/Omega. Older Py2 idioms are gone:
 
-The `xbmc*` modules (`xbmc`, `xbmcaddon`, `xbmcgui`, `xbmcplugin`, `xbmcvfs`) only exist inside Kodi's embedded interpreter. You cannot run any of this code from a normal shell; static reading / grep is the primary tool for working in this repo.
+- `unicode` → `str`. `iteritems()` → `items()`. `StringIO` → `BytesIO` or stdlib `bytes`.
+- `urlparse` / `urllib` → `urllib.parse`.
+- `xbmc.LOGNOTICE` (removed in Kodi 19) → `xbmc.LOGINFO`.
+- `subprocess._subprocess.STARTF_USESHOWWINDOW` → `subprocess.STARTF_USESHOWWINDOW` (top-level).
+- `xbmcgui.ListItem.setIconImage` / `setThumbnailImage` / `iconImage=` ctor kwarg → `setArt({"icon": ..., "thumb": ...})`.
+- **`.decode("utf-8")` on `addon.getSetting()`, `xbmc.getInfoLabel()`, `window.getProperty()`, `sys.argv[2]`, etc. is gone** — these APIs return `str` directly in Py3.
+- Vendored CherryPy replaced by stdlib `wsgiref` in `resources/lib/httpproxy.py`. `script.module.six` removed from `addon.xml`.
 
-Use `xbmc.log(..., level=xbmc.LOGNOTICE|LOGWARNING|LOGDEBUG)` via the `log_msg` / `log_exception` helpers in `utils.py` — never `print`.
+The `xbmc*` modules (`xbmc`, `xbmcaddon`, `xbmcgui`, `xbmcplugin`, `xbmcvfs`) only exist inside Kodi's embedded interpreter. Tests stub them via `tests/conftest.py` so `resources/lib/` is importable under pytest.
+
+Use `xbmc.log(..., level=xbmc.LOGDEBUG|LOGINFO|LOGWARNING|...)` via the `log_msg` / `log_exception` helpers in `utils.py`.
 
 ## Architecture: the silent-stream trick
 
@@ -29,7 +37,7 @@ Both add `resources/lib/` to `sys.path` before importing.
 
 `service.py` spins up two things and idles in a `waitForAbort` loop until Kodi exits:
 
-- **`ProxyRunner`** (`resources/lib/httpproxy.py`): a CherryPy WSGI server bound to `127.0.0.1` on the first free port in `51100–51150`. Its `Track.default` handler synthesizes a silent PCM WAV header + zeroed samples sized to the current track's duration. Radio streams use a hardcoded 3600 s duration. Requests are restricted to `127.0.0.1` and `GET`/`HEAD` only.
+- **`ProxyRunner`** (`resources/lib/httpproxy.py`): a stdlib `wsgiref` WSGI server bound to `127.0.0.1` on the first free port in `51100–51150`. The `_SilentStreamApp` handler synthesizes a silent PCM WAV header + zeroed samples sized to the current track's duration. Radio streams use a hardcoded 3600 s duration. Requests are restricted to `127.0.0.1` and `GET`/`HEAD` only.
 - **`MainService`** thread (`resources/lib/main_service.py`):
   - Resolves a player ID from the host MAC (`utils.get_mac` polls `Network.MacAddress` for up to ~360 s), or the manual MAC setting.
   - Discovers an LMS via UDP broadcast on port 3483 (`LMSDiscovery` in `lmsserver.py`, payload `b"eJSON\0"`), or uses manual `lms_hostname`/`lms_port`.
@@ -74,12 +82,13 @@ There is no shared Python module state between them.
 ## Dependencies
 
 Declared in `addon.xml`:
-- `xbmc.python 2.13.0`, `xbmc.addon 12.0.0` (Kodi Leia API)
-- `script.module.six`, `script.module.requests`, `script.module.simplecache` — provided by Kodi's addon system, not pip.
+- `xbmc.python 3.0.3`, `xbmc.addon 19.0.0` (Kodi Matrix+ API, addon targets Omega / v21).
+- `script.module.requests`, `script.module.simplecache` — provided by Kodi's addon system, not pip. (`script.module.six` was dropped in the v2.0 port.)
 
 Vendored under `resources/lib/`:
-- **`cherrypy/`** — full CherryPy tree (used only for `wsgiserver` + minimal request handling in `httpproxy.py`). Don't refactor; treat as third-party.
 - **`bin/`** — Squeezelite binaries for `win32`, `osx`, `linux` (incl. `squeezelite-arm` for RPi, `-i64`/`-x86` for Linux x86/x64, plus Windows DLLs).
+
+The HTTP proxy uses stdlib `wsgiref` directly — there is no vendored web framework anymore (CherryPy was removed in v2.0).
 
 ## Localization
 
