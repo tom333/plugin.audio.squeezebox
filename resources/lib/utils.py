@@ -41,7 +41,7 @@ def log_msg(msg, loglevel=xbmc.LOGINFO):
 
 def log_exception(modulename, exceptiondetails):
     '''helper to properly log an exception'''
-    log_msg(format_exc(sys.exc_info()), xbmc.LOGDEBUG)
+    log_msg(format_exc(), xbmc.LOGDEBUG)
     log_msg("Exception in %s ! --> %s" % (modulename, exceptiondetails), xbmc.LOGWARNING)
 
 
@@ -135,14 +135,13 @@ def process_method_on_list(method_to_run, items):
             all_items = pool.map(method_to_run, items)
         except Exception:
             # catch exception to prevent threadpool running forever
-            log_msg(format_exc(sys.exc_info()))
+            log_msg(format_exc())
             log_msg("Error in %s" % method_to_run)
         pool.close()
         pool.join()
     else:
         all_items = [method_to_run(item) for item in items]
-    all_items = filter(None, all_items)
-    return all_items
+    return [item for item in all_items if item]
 
 
 def parse_duration(durationobj):
