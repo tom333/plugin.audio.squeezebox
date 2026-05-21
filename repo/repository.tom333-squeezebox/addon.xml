@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="repository.tom333-squeezebox" name="Squeezebox for Kodi (tom333 fork)" version="1.0.0" provider-name="tom333">
+    <requires>
+        <import addon="xbmc.addon" version="19.0.0"/>
+    </requires>
+    <extension point="xbmc.addon.repository" name="Squeezebox for Kodi (tom333 fork)">
+        <dir>
+            <info compressed="false">https://tom333.github.io/plugin.audio.squeezebox/addons.xml</info>
+            <checksum>https://tom333.github.io/plugin.audio.squeezebox/addons.xml.md5</checksum>
+            <datadir zip="true">https://tom333.github.io/plugin.audio.squeezebox/</datadir>
+        </dir>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en">Repository: Squeezebox for Kodi (tom333 fork)</summary>
+        <description lang="en">Install once to receive automatic updates of plugin.audio.squeezebox (Kodi 21 Omega port maintained by tom333).</description>
+        <platform>all</platform>
+        <license>Apache v2.0</license>
+        <source>https://github.com/tom333/plugin.audio.squeezebox</source>
+    </extension>
+</addon>

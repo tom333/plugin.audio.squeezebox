@@ -3,6 +3,17 @@ Squeezelite player for Kodi
 
 > **v2.0** — ported to Kodi 21 Omega (Python 3). Older Kodi versions (≤20 Nexus) are no longer supported by this branch; install v1.0.19 instead.
 
+## Install (Kodi 21 Omega)
+
+The tom333 fork is distributed as a Kodi repository, so Kodi handles updates automatically.
+
+1. Download the repository addon zip from the [latest release](https://github.com/tom333/plugin.audio.squeezebox/releases/latest): `repository.tom333-squeezebox-X.Y.Z.zip`
+2. In Kodi: **Settings → Add-ons → Install from zip file** → pick the downloaded file.
+3. Then: **Install from repository → Squeezebox for Kodi (tom333 fork) → Music add-ons → Squeezelite Player for Kodi → Install**.
+4. Future plugin updates are pulled automatically by Kodi.
+
+Direct one-shot install (no auto-updates) is also possible: download `plugin.audio.squeezebox-X.Y.Z.zip` from the same release page and install it via "Install from zip file".
+
 ________________________________________________________________________________________________________
 
 

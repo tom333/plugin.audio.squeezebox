@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # for creating GitHub Releases
+  pages: write      # for deploying to Pages
+  id-token: write   # required by deploy-pages action
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: pytest -v
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # we read addon.xml from refs, need full history
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Verify tag matches addon.xml version
+        run: |
+          tag_version="${GITHUB_REF_NAME#v}"
+          xml_version=$(python3 -c "import xml.etree.ElementTree as ET; print(ET.parse('addon.xml').getroot().get('version'))")
+          if [[ "$tag_version" != "$xml_version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME (version $tag_version) does not match addon.xml version $xml_version"
+            exit 1
+          fi
+          echo "Tag matches addon.xml version: $xml_version"
+
+      - name: Build Pages site (zip + addons.xml + md5)
+        run: scripts/build-pages.sh --output public
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Stash release assets
+        run: |
+          mkdir -p release-assets
+          find public -name '*.zip' -exec cp {} release-assets/ \;
+
+      - name: Upload release-assets artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-assets
+          path: release-assets/
+
+  publish-pages:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release-assets artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-assets
+          path: release-assets
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-assets/*.zip
+          generate_release_notes: true
