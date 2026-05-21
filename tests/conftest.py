@@ -15,6 +15,7 @@ xbmc.LOGINFO = 1
 xbmc.LOGWARNING = 2
 xbmc.LOGERROR = 3
 xbmc.LOGFATAL = 4
+xbmc.LOGNOTICE = 2  # removed in Kodi 19 (Python 3); stubbed for transitional imports
 xbmc.PLAYLIST_MUSIC = 0
 xbmc.ISO_639_1 = 0
 xbmc.log = lambda msg, level=1: None
@@ -42,6 +43,23 @@ class _Player:
 
 
 xbmc.Player = _Player
+
+
+class _Keyboard:
+    def __init__(self, *a, **kw):
+        pass
+
+    def doModal(self, *a, **kw):
+        pass
+
+    def isConfirmed(self):
+        return False
+
+    def getText(self):
+        return ""
+
+
+xbmc.Keyboard = _Keyboard
 
 
 class _PlayList:
@@ -95,7 +113,23 @@ class _Window:
 
 
 xbmcgui.Window = _Window
-xbmcgui.Dialog = lambda: None
+
+
+class _Dialog:
+    def ok(self, *a, **kw):
+        return None
+
+    def yesno(self, *a, **kw):
+        return False
+
+    def notification(self, *a, **kw):
+        return None
+
+    def select(self, *a, **kw):
+        return -1
+
+
+xbmcgui.Dialog = _Dialog
 
 xbmcaddon = _make_stub("xbmcaddon")
 
