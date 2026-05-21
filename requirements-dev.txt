@@ -1,0 +1,2 @@
+pytest>=8.0
+kodistubs>=21.0
