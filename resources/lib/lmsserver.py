@@ -9,12 +9,11 @@
 '''
 
 import xbmc
-from utils import log_msg, log_exception, json, process_method_on_list
+from utils import log_msg, log_exception, process_method_on_list
+import json
 import requests
-import thread
 import socket
 import threading
-import re
 from simplecache import SimpleCache
 
 TAGS_FULL = "aAcCdegGijJKlostuxyRwk"  # full track/album details
@@ -183,7 +182,7 @@ class LMSServer:
             if result and result.get("songinfo_loop") and result["songinfo_loop"]:
                 for item in result["songinfo_loop"]:
                     # merge results without overwriting
-                    for key, value in item.iteritems():
+                    for key, value in item.items():
                         if not (lms_song.get(key) or lms_song.get(key) == "0"):
                             lms_song[key] = value
         # correct some other weird stuff
@@ -206,7 +205,7 @@ class LMSServer:
 
     def send_request(self, cmd):
         '''send request to lms server'''
-        if isinstance(cmd, (str, unicode)):
+        if isinstance(cmd, str):
             if "[SP]" in cmd:
                 new_cmd = []
                 for item in cmd.split():
@@ -231,8 +230,7 @@ class LMSServer:
                 if "result" in result:
                     result = result["result"]
             else:
-                log_msg("Invalid or empty reponse from server - command: %s - server response: %s" %
-                        (cmd, response.status_code))
+                log_msg("Invalid or empty response from server - status: %s" % response.status_code)
         except Exception:
             log_exception(__name__, "Server is offline or connection error...")
 
@@ -294,29 +292,23 @@ class LMSDiscovery(object):
         return list(self.entries)
 
     def update(self):
-        """update the server netry with details"""
-        lms_ip = '<broadcast>'
-        lms_port = 3483
-        # JSON tag has the port number, it's all we need here.
-        lms_msg = "eJSON\0"
-        lms_timeout = 5
+        """update the server entry with details"""
+        from lms_discovery import parse_lms_response, LMS_QUERY, LMS_PORT
         entries = []
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        sock.settimeout(lms_timeout)
+        sock.settimeout(5)
         sock.bind(('', 0))
         try:
-            sock.sendto(lms_msg, (lms_ip, lms_port))
+            sock.sendto(LMS_QUERY, ('<broadcast>', LMS_PORT))
             while True:
                 try:
                     data, server = sock.recvfrom(1024)
                     host, _ = server
-                    if data.startswith(b'E'):
-                        port = data.split("\x04")[1]
-                        entries.append({'port': int(port),
-                                        'data': data,
-                                        'from': server,
-                                        'host': host})
+                    port = parse_lms_response(data)
+                    if port is not None:
+                        entries.append({'port': port, 'data': data,
+                                        'from': server, 'host': host})
                 except socket.timeout:
                     break
         finally:
