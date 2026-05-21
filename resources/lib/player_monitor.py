@@ -52,7 +52,7 @@ class KodiPlayer(xbmc.Player):
 
     def onPlayBackStarted(self):
         '''Kodi event fired when playback is started (including next tracks)'''
-        is_busy = True
+        self.is_busy = True
         if self.isPlayingVideo():
             # player is now playing video ! - disable the LMS player
             self.is_playing = False
@@ -68,7 +68,7 @@ class KodiPlayer(xbmc.Player):
                     new_index = self.playlist.getposition()
                     log_msg("other track requested by kodi player - index: %s" % new_index)
                     self.lmsserver.send_command("playlist index %s" % new_index)
-        is_busy = False
+        self.is_busy = False
 
     def onPlayBackSpeedChanged(self, speed):
         '''Kodi event fired when player is fast forwarding/rewinding'''
