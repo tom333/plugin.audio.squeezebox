@@ -13,6 +13,7 @@ import xbmcvfs
 import xbmcaddon
 import subprocess
 import os
+import platform
 import stat
 import sys
 import json
@@ -71,23 +72,32 @@ def get_squeezelite_binary():
     if custom_path:
         sl_binary = custom_path
     elif xbmc.getCondVisibility("System.Platform.Windows"):
-        sl_binary = os.path.join(os.path.dirname(__file__), "bin", "win32", "squeezelite-win.exe")
+        # win64 added in v2.0.2; falls back to win32 on 32-bit Python.
+        if sys.maxsize > 2**32:
+            sl_binary = os.path.join(os.path.dirname(__file__), "bin", "win64", "squeezelite-x64.exe")
+        else:
+            sl_binary = os.path.join(os.path.dirname(__file__), "bin", "win32", "squeezelite-win.exe")
     elif xbmc.getCondVisibility("System.Platform.OSX"):
         sl_binary = os.path.join(os.path.dirname(__file__), "bin", "osx", "squeezelite")
         st = os.stat(sl_binary)
         os.chmod(sl_binary, st.st_mode | stat.S_IEXEC)
     elif xbmcvfs.exists("/storage/.kodi/addons/virtual.multimedia-tools/bin/squeezelite"):
-        # libreelec has squeezelite preinstalled with the multimedia tools
+        # LibreELEC has squeezelite preinstalled with the multimedia tools
         sl_binary = "/storage/.kodi/addons/virtual.multimedia-tools/bin/squeezelite"
-    elif xbmc.getCondVisibility("System.Platform.Linux.RaspberryPi"):
-        sl_binary = os.path.join(os.path.dirname(__file__), "bin", "linux", "squeezelite-arm")
-        st = os.stat(sl_binary)
-        os.chmod(sl_binary, st.st_mode | stat.S_IEXEC)
     elif xbmc.getCondVisibility("System.Platform.Linux"):
-        if sys.maxsize > 2**32:
-            sl_binary = os.path.join(os.path.dirname(__file__), "bin", "linux", "squeezelite-i64")
+        # Pick by host arch via platform.machine() rather than relying on
+        # the Pi-only Kodi flag — covers ARM laptops, Jetson, non-Pi ARM
+        # SBCs, etc., and distinguishes armhf from aarch64 on 64-bit Pi OS.
+        machine = platform.machine().lower()
+        if machine in ("aarch64", "arm64"):
+            leaf = "squeezelite-aarch64"
+        elif machine.startswith("arm"):
+            leaf = "squeezelite-arm"
+        elif sys.maxsize > 2**32:
+            leaf = "squeezelite-i64"
         else:
-            sl_binary = os.path.join(os.path.dirname(__file__), "bin", "linux", "squeezelite-x86")
+            leaf = "squeezelite-i386"
+        sl_binary = os.path.join(os.path.dirname(__file__), "bin", "linux", leaf)
         st = os.stat(sl_binary)
         os.chmod(sl_binary, st.st_mode | stat.S_IEXEC)
     else:
