@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-	<addon id="plugin.audio.squeezebox" name="Squeezebox for Kodi" version="2.0.1" provider-name="marcelveldt">
+	<addon id="plugin.audio.squeezebox" name="Squeezebox for Kodi" version="2.0.2" provider-name="marcelveldt">
 	<requires>
 		<import addon="xbmc.python" version="3.0.3"/>
 		<import addon="xbmc.addon" version="19.0.0"/>
@@ -20,6 +20,6 @@
 		<forum></forum>
 		<website></website>
 		<source>https://github.com/marcelveldt/plugin.audio.squeezebox</source>
-		<news>v2.0.1 — Added French translation (fr_fr).</news>
+		<news>v2.0.2 — Refreshed bundled Squeezelite binaries to current upstream (May 2026). Added aarch64 build for Pi 4/5 on 64-bit OS and win64 build for 64-bit Windows.</news>
 	</extension>
 </addon>
