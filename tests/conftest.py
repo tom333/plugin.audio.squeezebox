@@ -31,7 +31,14 @@ class _Monitor:
 
 
 xbmc.Monitor = _Monitor
-xbmc.getInfoLabel = lambda *a, **kw: ""
+def _get_info_label(label="", *a, **kw):
+    # Provide a parseable BuildVersion so module-level int(...) calls succeed
+    if label == "System.BuildVersion":
+        return "21.0"
+    return ""
+
+
+xbmc.getInfoLabel = _get_info_label
 xbmc.getCondVisibility = lambda *a, **kw: False
 xbmc.getLanguage = lambda *a, **kw: "en"
 xbmc.executebuiltin = lambda *a, **kw: None
