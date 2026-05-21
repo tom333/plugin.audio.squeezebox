@@ -15,14 +15,10 @@ import subprocess
 import os
 import stat
 import sys
-import urllib
+import json
 from traceback import format_exc
-import requests
 
-try:
-    import simplejson as json
-except Exception:
-    import json
+import requests
 
 
 ADDON_ID = "plugin.audio.squeezebox"
@@ -36,10 +32,10 @@ except Exception:
     SUPPORTS_POOL = False
 
 
-def log_msg(msg, loglevel=xbmc.LOGNOTICE):
+def log_msg(msg, loglevel=xbmc.LOGINFO):
     '''log message to kodi log'''
-    if isinstance(msg, unicode):
-        msg = msg.encode('utf-8')
+    if isinstance(msg, bytes):
+        msg = msg.decode('utf-8', 'replace')
     xbmc.log("%s --> %s" % (ADDON_ID, msg), level=loglevel)
 
 
@@ -70,7 +66,7 @@ def get_squeezelite_binary():
     '''find the correct squeezelite binary belonging to the platform'''
     sl_binary = ""
     addon = xbmcaddon.Addon(id=ADDON_ID)
-    custom_path = addon.getSetting("squeezelite_path").decode("utf-8")
+    custom_path = addon.getSetting("squeezelite_path")
     del addon
     if custom_path:
         sl_binary = custom_path
@@ -107,30 +103,24 @@ def get_audiodevices(sl_binary=None):
     startupinfo = None
     if xbmc.getCondVisibility("System.Platform.Windows"):
         startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess._subprocess.STARTF_USESHOWWINDOW
-    sl_exec = subprocess.Popen(args, startupinfo=startupinfo, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    stdout, stderr = sl_exec.communicate()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    sl_exec = subprocess.Popen(args, startupinfo=startupinfo, stderr=subprocess.STDOUT,
+                               stdout=subprocess.PIPE, text=True)
+    stdout, _ = sl_exec.communicate()
     for line in stdout.split("\n"):
         line = line.strip()
-        if line and not "Output devices:" in line:
+        if line and "Output devices:" not in line:
             result.append(line)
     return result
     
 def get_audiodevice(sl_binary):
     '''get the audiodevice to use for squeezelite'''
     addon = xbmcaddon.Addon(id=ADDON_ID)
-    user_device = addon.getSetting("output_device").decode("utf-8")
+    user_device = addon.getSetting("output_device")
     del addon
     if user_device and user_device != "auto":
         return user_device
     
-    args = [sl_binary, "-l"]
-    startupinfo = None
-    if xbmc.getCondVisibility("System.Platform.Windows"):
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags |= subprocess._subprocess.STARTF_USESHOWWINDOW
-    sl_exec = subprocess.Popen(args, startupinfo=startupinfo, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
-    stdout, stderr = sl_exec.communicate()
     for line in get_audiodevices():
         if "default" in line:
             return line.split("-")[0].strip()
