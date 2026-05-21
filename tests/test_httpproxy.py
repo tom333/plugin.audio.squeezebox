@@ -54,3 +54,19 @@ def test_unknown_path_404(runner):
     with pytest.raises(HTTPError) as exc_info:
         _get(runner, "/notatrack/3")
     assert exc_info.value.code == 404
+
+
+def test_allow_ranges_false_ignores_range_header():
+    """When ProxyRunner is constructed with allow_ranges=False, Range: requests
+    must be served as full 200 OK responses instead of 206 Partial Content."""
+    runner = ProxyRunner(host="127.0.0.1", try_ports=range(52100, 52150),
+                         allow_ranges=False)
+    runner.start()
+    try:
+        url = "http://127.0.0.1:%d/track/3" % runner.get_port()
+        req = Request(url, headers={"Range": "bytes=0-10"}, method="GET")
+        resp = urlopen(req, timeout=5)
+        assert resp.status == 200
+        assert "Content-Range" not in resp.headers
+    finally:
+        runner.stop()

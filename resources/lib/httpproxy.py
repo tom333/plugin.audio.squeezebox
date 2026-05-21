@@ -78,8 +78,9 @@ def _range_chunks(header, total_size, start, end):
 class _SilentStreamApp:
     """WSGI app: GET/HEAD /track/<duration|"radio"> → silent WAV."""
 
-    def __init__(self, allowed_ips):
+    def __init__(self, allowed_ips, allow_ranges=True):
         self.allowed_ips = set(allowed_ips)
+        self.allow_ranges = allow_ranges
 
     def __call__(self, environ, start_response):
         method = environ["REQUEST_METHOD"].upper()
@@ -107,7 +108,7 @@ class _SilentStreamApp:
 
         header, total_size = build_wav_header(duration)
         payload_size = total_size - len(header)
-        range_header = environ.get("HTTP_RANGE", "")
+        range_header = environ.get("HTTP_RANGE", "") if self.allow_ranges else ""
 
         if is_radio:
             # Note: 'Connection' is a hop-by-hop header and forbidden by
@@ -156,7 +157,7 @@ class ProxyRunner(threading.Thread):
         super().__init__(daemon=True)
         self._host = host
         self._port = _find_free_port(host, list(try_ports))
-        self._app = _SilentStreamApp(allowed_ips)
+        self._app = _SilentStreamApp(allowed_ips, allow_ranges=allow_ranges)
         self._server = make_server(host, self._port, self._app,
                                    handler_class=_QuietHandler)
 
