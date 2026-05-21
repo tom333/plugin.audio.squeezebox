@@ -227,10 +227,18 @@ class MainService(threading.Thread):
         if xbmc.getCondVisibility("System.Platform.Windows"):
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            subprocess.Popen(["taskkill", "/IM", "squeezelite-win.exe"], startupinfo=startupinfo, shell=True)
-            subprocess.Popen(["taskkill", "/IM", "squeezelite.exe"], startupinfo=startupinfo, shell=True)
+            # Cover every bundled Windows binary name across versions
+            # (legacy 32-bit ships as squeezelite-win.exe; v2 64-bit as
+            # squeezelite-x64.exe; user-installed copies may be plain).
+            for name in ("squeezelite.exe", "squeezelite-win.exe", "squeezelite-x64.exe"):
+                subprocess.Popen(["taskkill", "/IM", name],
+                                 startupinfo=startupinfo,
+                                 stdout=subprocess.DEVNULL,
+                                 stderr=subprocess.DEVNULL)
         else:
-            os.system("killall squeezelite")
-            os.system("killall squeezelite-i64")
-            os.system("killall squeezelite-x86")
+            # Cover every bundled Linux binary name + the plain `squeezelite`
+            # used by distro packages and the LibreELEC multimedia-tools build.
+            for name in ("squeezelite", "squeezelite-arm", "squeezelite-aarch64",
+                         "squeezelite-i64", "squeezelite-i386"):
+                os.system("killall %s 2>/dev/null" % name)
         xbmc.sleep(2000)
